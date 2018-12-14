@@ -3,10 +3,20 @@ import java.time.LocalTime;
 
 
 public class Main {
+
+  /*Characters*/
   static Fish fish[];
-  private static int groups[];
-  static Mantis mantis;
-  private static Semaphore group; //grouping semiphore
+  static MantaRay mantis;
+
+  /*Places*/
+  static MeetingPlace meetPlace;
+  static RemoteReef school;
+
+  /*Helper variables*/
+  static int groups[];
+  static Semaphore fishAlert;
+  static Semaphore mantisAlert;
+
 
   public static void main(String[] args) {
     int totalFish = 0;
@@ -18,33 +28,45 @@ public class Main {
       totalFish = Integer.parseInt(args[0]);
       groupSize = Integer.parseInt(args[1]);
       mantisCapacity = Integer.parseInt(args[2]);
-      group = new Semaphore(groupSize);
-      group.aquire(groupSize);
+      // group.acquire(groupSize);
     } else {
       totalFish = 13;
       groupSize = 3;
       mantisCapacity = 7;
-      group = new Semaphore(groupSize);
-      group.aquire(groupSize);
+      
+      // group.acquire(groupSize);
     }
+
+    try{
+
+      fishAlert = new Semaphore(totalFish);
+      fishAlert.acquire(totalFish);
+
+    } catch(InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    mantisAlert = new Semaphore(1);
     
     /*Initialize objects*/
-    MeetingPlace meetPlace = new MeetingPlace(totalFish, groupSize, group);
-    RemoteReef school = new RemoteReef(totalFish, meetPlace);
+    meetPlace = new MeetingPlace(totalFish, groupSize);
+    school = new RemoteReef(totalFish, meetPlace, fishAlert);
 
     fish = new Fish[totalFish];
     for(int i = 0; i < totalFish; i++) {
-      fish[i] = new Fish(totalFish, groupSize, meetPlace, school, group);
+      fish[i] = new Fish(totalFish, groupSize, meetPlace, school, mantisAlert, fishAlert);
       fish[i].start();
     }
 
-    mantis = new Mantis(mantisCapacity, meetPlace, school, totalFish, groupSize);
+    mantis = new MantaRay(mantisCapacity, meetPlace, school, totalFish, groupSize, mantisAlert);
     mantis.start();
 
-    Grouper grouper = new Grouper(totalFish, meetPlace, fish, group);
-    grouper.start();
+    // Grouper grouper = new Grouper(totalFish, meetPlace, fish, group);
+    // grouper.start();
     
-    System.out.println("Main Program has done its job and is ending at: " + LocalTime.now());
-    System.out.println();
+    // System.out.println("Main Program has done its job and is ending at: " + LocalTime.now());
+    // System.out.println();
   }
+
+
 }
