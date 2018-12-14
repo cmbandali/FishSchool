@@ -7,11 +7,12 @@ public class Fish extends Thread {
     /*Places*/
     MeetingPlace meetPlace;
     RemoteReef school;
+    MantaRay mantis;
 
     /*Semaphores*/
-    Semaphore group;
+    Semaphore fish;
     Semaphore mutex;
-    Semaphore mantis;
+    Semaphore mantisAlert;
     Semaphore fishAlert;
 
     /*Traking variables*/
@@ -22,14 +23,16 @@ public class Fish extends Thread {
     public static long time; //thread start time
 
 
-  public Fish(int totalFish, int groupSize, MeetingPlace meetPlace, RemoteReef school, Semaphore mantis, Semaphore fishAlert) {
+
+  public Fish(int totalFish, int groupSize, MeetingPlace meetPlace, RemoteReef school, Semaphore mantisAlert, MantaRay mantis) {
 
     this.meetPlace = meetPlace;
     this.school = school;
-
-    // this.group = group;
-    this.mutex = new Semaphore(1);
     this.mantis = mantis;
+
+    this.fish = new Semaphore(1);
+    this.mutex = new Semaphore(1);
+    this.mantisAlert = mantisAlert;
 
     this.totalFish = totalFish;
     this.groupSize = groupSize;
@@ -37,25 +40,55 @@ public class Fish extends Thread {
 
     time = System.currentTimeMillis();
 
+    /*Set individual thread semaphore to zero, used for being signaled to transport, being signaled when at school and being signaled when school ends*/
+    try {
+      fish.acquire(1);
+    } catch(InterruptedException e) {
+      System.out.println("Error while setting individual fish semaphore to zero");
+    }
+
   }
+
+
+  public void signalFish(Fish fish, String msg) {
+
+    try{
+      mutex.acquire();
+      this.msg(msg);
+      mantis.fishex.get(fish).release();
+      mutex.release();
+    } catch(InterruptedException e){
+      e.printStackTrace();
+    }
+
+  }
+
+
+  public void signalMantis(String msg) {
+    this.msg(msg);
+    mantisAlert.release();
+  }
+
+
 
   public void msg(String m) {
     System.out.println("[" + (System.currentTimeMillis()-time) + "] " + " Fish[" + this.getName() + "]" + ": " + m);
   }
 
 
+
   public void run() {
-    System.out.println("Fish[" + this.getName() + "] is going to meeting place at: " + LocalTime.now());
+    this.msg("is going to meeting place");
 
     int sleepTime = (int) Math.random() * 40 + 10;
     try{
 
       this.sleep(sleepTime);
-      
+         
     } catch(InterruptedException ie) {
-      System.out.println();
-      ie.printStackTrace();
+      System.out.println("Error when trying to sleep while going to meeting place");
     }
+
     meetPlace.addFish(this);
 
     /*Getting grouped*/
@@ -66,27 +99,41 @@ public class Fish extends Thread {
     try{
 
       mutex.acquire();
-      System.out.println("Fish[" + this.getName() + "] is checking that everyone has been grouped: " + LocalTime.now());
+      this.msg("is checking if all fish have been grouped");
       if(groupInfo[1] == 1){
-        System.out.println("Fish[" + this.getName() + "] is notifying Mantis at: " + LocalTime.now());
-        mantis.release();
+        this.signalMantis("is letting mantis know they are ready for school");
+
       }
       mutex.release();
       
     } catch(InterruptedException ie) {
-      System.out.println();
-      ie.printStackTrace();
+      System.out.println("Error while either checking that fish have been grouped or notifying mantis");
     }
 
-    // try{
-    //   fishAlert.acquire();
-    //   this.msg("has been released at school");
-    // } catch(InterruptedException e) {
-    //   e.printStackTrace();
-    // }
+    mantis.addSemaphore(fish, this);
 
+    /*needs to be signaled to transport*/
+    try{
+      fish.acquire();
+    } catch(InterruptedException e) {
+      e.printStackTrace();
+    }
 
-  }
+    /*needs to be signaled when at school*/
+    try{
+      fish.acquire();
+    } catch(InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    /*needs to be signaled when school day ends*/
+    try{
+      fish.acquire();
+    } catch(InterruptedException e) {
+      e.printStackTrace();
+    }
+
+  } //run
 
 
 }

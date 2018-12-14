@@ -13,7 +13,6 @@ public class Main {
   static RemoteReef school;
 
   /*Helper variables*/
-  static int groups[];
   static Semaphore fishAlert;
   static Semaphore mantisAlert;
 
@@ -28,13 +27,10 @@ public class Main {
       totalFish = Integer.parseInt(args[0]);
       groupSize = Integer.parseInt(args[1]);
       mantisCapacity = Integer.parseInt(args[2]);
-      // group.acquire(groupSize);
     } else {
       totalFish = 13;
       groupSize = 3;
       mantisCapacity = 7;
-      
-      // group.acquire(groupSize);
     }
 
     try{
@@ -50,22 +46,20 @@ public class Main {
     
     /*Initialize objects*/
     meetPlace = new MeetingPlace(totalFish, groupSize);
-    school = new RemoteReef(totalFish, meetPlace, fishAlert);
+    school = new RemoteReef(totalFish, meetPlace);
 
     fish = new Fish[totalFish];
+    mantis = new MantaRay(mantisCapacity, meetPlace, school, totalFish, groupSize, mantisAlert);
+
     for(int i = 0; i < totalFish; i++) {
-      fish[i] = new Fish(totalFish, groupSize, meetPlace, school, mantisAlert, fishAlert);
+      fish[i] = new Fish(totalFish, groupSize, meetPlace, school, mantisAlert, mantis);
       fish[i].start();
     }
 
-    mantis = new MantaRay(mantisCapacity, meetPlace, school, totalFish, groupSize, mantisAlert);
-    mantis.start();
+    meetPlace.addMantis(mantis);
+    school.addMantis(mantis);
 
-    // Grouper grouper = new Grouper(totalFish, meetPlace, fish, group);
-    // grouper.start();
-    
-    // System.out.println("Main Program has done its job and is ending at: " + LocalTime.now());
-    // System.out.println();
+    mantis.start();
   }
 
 

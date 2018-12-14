@@ -46,20 +46,25 @@ public class MeetingPlace {
 
   }
 
-  public void addFish(Fish fish) {
+  public void addMantis(MantaRay mantis) {
+  	this.mantis = mantis;
+  }
 
-		this.fish.add(fish);
+  public void addFish(Fish fish) {
 
 		try {
 
 			mutex.acquire();
+			this.fish.add(fish);
 			numArrived++;
-			System.out.println("Fish[" + fish.getName() + "] has arrived at meetingPlace at: " + LocalTime.now());
+			// System.out.println("Fish[" + fish.getName() + "] has arrived at meetingPlace at: " + LocalTime.now());
+			fish.msg("has arrived at the meeting place");
 			mutex.release();
 
 		} catch(InterruptedException e) {
 
-				e.printStackTrace();
+				// e.printStackTrace();
+			System.out.println("error in addFish() in MeetingPlace");
 
 		}
 
@@ -76,16 +81,13 @@ public class MeetingPlace {
   		/*group the fish*/
   		if(numGroupMembers < groupSize) {
   			groupMembers[groupNumber][numGroupMembers++] = fish;
-  			System.out.println("Fish[" + fish.getName() + "] is a new member of group: " + groupNumber + " at: " + LocalTime.now());
-  			System.out.println("number of group members is: " + numGroupMembers);
+  			fish.msg("is a new member of group: " + groupNumber);
   			gn = groupNumber;
-  			// gs = numGroupMembers;
   		} else {
   			groupNumber++;
   			numGroupMembers = 0;
   			groupMembers[groupNumber][numGroupMembers++] = fish;
-  			System.out.println("Fish[" + fish.getName() + "] is a new member of group: " + groupNumber + " at: " + LocalTime.now());
-  			System.out.println("number of group members is: " + numGroupMembers);
+  			fish.msg("is a new member of group: " + groupNumber);
   			gn = groupNumber;
   			if(groupNumber*groupSize+numGroupMembers == totalFish){
   				lastGrouped = 1;
@@ -115,38 +117,49 @@ public class MeetingPlace {
 		int index = 0;
 		Fish[] travelingFish = new Fish[travelCapacity];
 
-		for(int i = 0; i < groupMembers.length; i++) {
+		try{
+			mutex.acquire();
 
-			if((currentNumOfTravelers + groupMembers[i].length) <= travelCapacity){
+			for(int i = 0; i < groupMembers.length; i++) {
 
-				System.out.println("group[" + i + "] is traveling");
+				if((currentNumOfTravelers + groupMembers[i].length) <= travelCapacity){
 
-				for(int f = 0; f < groupMembers[i].length; f++) {
+					System.out.println("group[" + i + "] is traveling");
 
-					if(groupMembers[i][f] != null) {
-						travelingFish[index++] = groupMembers[i][f];
-						currentNumOfTravelers++;
-						totalTraveled++;
-						System.out.println("Fish[" + groupMembers[i][f].getName() + "] is traveling to school");
+					for(int f = 0; f < groupMembers[i].length; f++) {
+						if(groupMembers[i][f] != null) {
+							travelingFish[index++] = groupMembers[i][f];
+							currentNumOfTravelers++;
+							totalTraveled++;
+
+							/*Signal fish that they are going to travel to school*/
+							String msg = "Fish[" + groupMembers[i][f].getName() + "] is traveling to school";						
+							mantis.signalFish(groupMembers[i][f], msg);
+						}
+
+						if(totalTraveled == totalFish) {
+							school.goToReef(travelingFish, currentNumOfTravelers);
+							f = groupMembers[i].length;
+						}
 					}
 
-					if(totalTraveled == totalFish) {
-						school.goToReef(travelingFish, currentNumOfTravelers);
-						f = groupMembers[i].length;
-					}
+				} else {
+
+					school.goToReef(travelingFish, currentNumOfTravelers);
+					travelingFish = new Fish[travelCapacity];
+					index = 0;
+					currentNumOfTravelers = 0;
+					i--;
+
 				}
 
-			} else {
+			} //for
 
-				school.goToReef(travelingFish, currentNumOfTravelers);
-				travelingFish = new Fish[travelCapacity];
-				index = 0;
-				currentNumOfTravelers = 0;
-				i--;
+			mutex.release();
 
-			}
-
-		} //for
+		} catch(InterruptedException e) {
+			e.printStackTrace();
+		}
 
 	} //end of method
 
