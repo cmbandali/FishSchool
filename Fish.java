@@ -70,6 +70,11 @@ public class Fish extends Thread {
   }
 
 
+  public long fishTime() {
+    return System.currentTimeMillis()-time;
+  }
+
+
 
   public void msg(String m) {
     System.out.println("[" + (System.currentTimeMillis()-time) + "] " + " Fish[" + this.getName() + "]" + ": " + m);

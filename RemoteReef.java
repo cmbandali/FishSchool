@@ -24,7 +24,7 @@ public class RemoteReef {
       atReef.add(travelingFish[i]);
 
       /*Signal fish that they are going to travel to school*/
-      String msg = "Fish[" + travelingFish[i].getName() + "] is at school";           
+      String msg = "Fish[" + travelingFish[i].getName() + "] is at school at [" + travelingFish[i].fishTime() + "] fish-time";           
       mantis.signalFish(travelingFish[i], msg);
     }
 

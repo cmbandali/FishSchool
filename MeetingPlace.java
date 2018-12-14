@@ -133,7 +133,7 @@ public class MeetingPlace {
 							totalTraveled++;
 
 							/*Signal fish that they are going to travel to school*/
-							String msg = "Fish[" + groupMembers[i][f].getName() + "] is traveling to school";						
+							String msg = "Fish[" + groupMembers[i][f].getName() + "] is traveling to school at [" + groupMembers[i][f].fishTime() + "] fish-time";						
 							mantis.signalFish(groupMembers[i][f], msg);
 						}
 
